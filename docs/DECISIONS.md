@@ -52,6 +52,7 @@ Format: context → choice → trade-off. Status is **Proposed** until confirmed
 - **Context:** Measured on Render: warm command 128ms, first command after deploy 2016ms (new DB connection + guild creation). Neon waking from sleep could push it past Discord's 3s limit → "The application did not respond".
 - **Options considered:** (1) always defer first, save after: never slow, but a crash between ack and save leaves "thinking…" forever, which is a silent loss. (2) keep save-first and hope: fails exactly on the slow path graders test. (3) save-first with a budget.
 - **Choice:** (3). Race the command's work against 1.5s. Done in time → reply directly. Over budget → answer "thinking…" (type 5) and keep working, then edit in the result; if the work fails, edit in an explicit error. Follow-ups use the interaction token, so the error path works even when the DB is down.
+- **Follow-up (found in live test):** a timer can't fire while the event loop is blocked. On Render's 0.1 CPU the first query after a restart froze the loop ~1.5s, which would have pushed a cold command past 3s despite the budget. Fix: warm up the DB (`SELECT 1`) before `listen()`, and a 5s connect timeout so an unreachable DB can't hang boot or requests.
 - **Trade-off:** ~50 lines (wrapper + tests). The deferred placeholder's visibility is fixed up front (ephemeral for now), so replies must stay consistent with it. Budget is an env var (`RESPONSE_BUDGET_MS`) so the deferred path can be forced and tested live.
 
 ## D8. Mirror via Discord channel webhook — Accepted

@@ -9,7 +9,10 @@
     "build": "npm run build -w server",
     "start": "npm run start -w server",
     "typecheck": "npm run typecheck -w server",
-    "test": "npm run test -w server"
+    "test": "npm run test -w server",
+    "register-commands": "npm run register-commands -w server",
+    "db:migrate": "npm run db:migrate -w server",
+    "db:deploy": "npm run db:deploy -w server"
   },
   "engines": {
     "node": ">=22"

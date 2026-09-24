@@ -57,6 +57,29 @@ Entry format: `### YYYY-MM-DD HH:MM — title` then Done / Problem / Fix (skip t
 - **Tested:** 10 `node:test` tests with our own Ed25519 key pair acting as Discord: valid PING, no headers, wrong key, tampered body, garbage signature, stale timestamp, non-numeric timestamp, non-JSON, wrong JSON shape, oversized body. **Mutation check:** disabling the signature check made 3 tests fail, so the tests really guard it.
 - **Next:** deploy, then set Interactions Endpoint URL in the Developer Portal (Discord sends a PING and a bad-signature request to validate it).
 
+### 2026-09-24 — Live attack test of /api/interactions
+
+- **Done:** PR #2 merged; Render redeployed in ~30s. Attacked the live URL: no headers, random 64-byte signature, garbage signature, 1-hour-old timestamp, empty body, form-encoded junk → all 401; 300kb body → 413; GET → 404. No stack traces or `X-Powered-By` in responses.
+- **Pending:** valid-signature PING can only come from Discord → verified when saving the Interactions Endpoint URL in the portal.
+
+### 2026-09-24 — Discord accepted the Interactions Endpoint URL
+
+- **Done:** Saved `https://discord-command-bot-mxhq.onrender.com/api/interactions` in the Developer Portal. Discord validates it by sending a signed PING (must PONG) and a badly signed request (must 401); it saved first time. Valid-signature path now proven live.
+
+### 2026-09-25 — Slash commands registered, bot invited
+
+- **Done:** `npm run register-commands` PUTs `/report` (required `text`, max 1000) and `/status` as **global** commands (multi-server), guild-only context. Invited the bot with only View Channel + Send Messages + Embed Links. `/status` in Discord → our live endpoint → fallback "can't handle that yet": full path Discord → signature check → handler works.
+- **Added:** `services/discord/api.ts`, the single Discord REST helper (bot auth, 5s timeout, `DiscordApiError` with status + retry-after).
+- **Concept learned:** the bot shows "offline" because an HTTP-interactions bot never connects to the gateway; that's expected.
+
+### 2026-09-25 — Prisma schema and first migration
+
+- **Done:** `prisma/schema.prisma` from DESIGN §4 (Guild, CommandConfig, Rule, Interaction, Action, ActionAttempt + enums). Migration `init` applied to Neon. `src/db/prisma.ts` = PrismaClient + `@prisma/adapter-pg` on the pooled URL; `prisma.config.ts` points migrations at `DIRECT_URL`. Generated client is git-ignored and built by `postinstall`.
+- **Prisma 7 differences (new to me):** URL lives in `prisma.config.ts`, not the schema; Prisma no longer loads `.env` (used Node's `process.loadEnvFile`, no dotenv); a driver adapter is required; client is generated into our `src/`. Checked by running `prisma init` in a scratch folder instead of trusting memory — it also tries to install AI skills/editor folders, so kept it out of the repo.
+- **Tested:** migration SQL has the 3 unique indexes (`discordId`, `(interactionId,type)`, `(guildId,commandName)`) and 6 FKs. Against Neon: inserting the same `discordId` twice → Postgres rejects with `P2002`; deleting a guild cascades to its interactions.
+- **npm audit:** 4 high in `mysql2` / `deepmerge-ts`, both inside the Prisma **CLI** (dev tool), not in our runtime; we don't use MySQL. `audit fix --force` would downgrade to Prisma 6, so accepted.
+- **Warning fixed:** pg warned that `sslmode=require` will weaken to libpq semantics in its next major → switched both URLs to `sslmode=verify-full` (same strict behaviour as today, explicit).
+
 ## AI wrong turns
 
 Record every time the AI suggested something wrong: what it said, how I noticed, what the fix was.

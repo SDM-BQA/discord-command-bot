@@ -25,6 +25,12 @@ Entry format: `### YYYY-MM-DD HH:MM — title` then Done / Problem / Fix (skip t
 - **Done:** Reviewed `docs/DESIGN.md` against the assignment PDF line by line. Found a gap: the rule only labelled reports (HIGH/LOW) and didn't change behaviour, so added `mirrorMinPriority` per command (D9). Chose webhook mirror (D8). Agreed the data model and its constraints (unique `discordId` for dedup, unique `(interactionId, type)` on actions, `guildId` everywhere).
 - **Next:** Neon project → Prisma schema from §4.
 
+### 2026-09-24 — Neon database created
+
+- **Done:** Neon project `discord-command-bot` in Singapore. Pooled (`DATABASE_URL`) and direct (`DIRECT_URL`) URLs in `.env`, both `sslmode=require`. Checked by variable name/shape only; the values never went into the AI chat.
+- **Skipped:** Neon's "set up with AI agent" prompt (global CLI, MCP server, `neon.ts`, `neon deploy`). Not needed: Prisma only needs the URLs, hosting is Render, and I don't want the AI to have direct DB access.
+- **Note:** AI suggested US East; I picked Singapore. Fine as long as Render is in the same region.
+
 ## AI wrong turns
 
 Record every time the AI suggested something wrong: what it said, how I noticed, what the fix was.

@@ -2,7 +2,8 @@ import type { Request, Response } from "express";
 import { InteractionType } from "discord-interactions";
 import { parseInteraction } from "../services/interactions/parseInteraction";
 import { handleCommand } from "../services/interactions/handleCommand";
-import { ephemeralMessage, pong } from "../utils/discordResponses";
+import { respondWithinBudget } from "../services/interactions/respondWithinBudget";
+import { COMMAND_FAILED_TEXT, ephemeralMessage, pong } from "../utils/discordResponses";
 import { logger } from "../utils/logger";
 
 // Runs only after verifyDiscordSignature, so req.body is the raw, verified Buffer.
@@ -24,9 +25,10 @@ export async function handleInteraction(req: Request, res: Response): Promise<vo
         return;
       case InteractionType.APPLICATION_COMMAND: {
         const startedAt = Date.now();
-        res.json(await handleCommand(interaction, log));
-        // Discord gives up after 3s; this is how we see how close we get.
-        log.info({ durationMs: Date.now() - startedAt }, "command responded");
+        // handleCommand has no token-free slow path: without a token it returns immediately, so "" is never used.
+        await respondWithinBudget(res, handleCommand(interaction, log), { token: interaction.token ?? "", log });
+        // Includes any deferred follow-up; a "budget exceeded" warning shows when Discord got "thinking…" first.
+        log.info({ durationMs: Date.now() - startedAt }, "command handled");
         return;
       }
       default:
@@ -34,9 +36,9 @@ export async function handleInteraction(req: Request, res: Response): Promise<vo
         res.json(ephemeralMessage("Sorry, I can't handle that yet."));
     }
   } catch (err) {
-    // Most likely the database is unreachable. Nothing was recorded, so say so honestly instead of
-    // letting Discord time out; the user can simply run the command again.
+    // Failed within the response budget (most likely the database is unreachable): tell the user now
+    // instead of letting Discord time out; they can simply run the command again.
     log.error({ err }, "failed to handle interaction");
-    res.json(ephemeralMessage("⚠️ Something went wrong and your command was not recorded. Please try again."));
+    res.json(ephemeralMessage(COMMAND_FAILED_TEXT));
   }
 }

@@ -22,10 +22,20 @@ export async function discordRequest<T>(method: HttpMethod, path: string, body?:
   if (!res.ok) {
     // Discord's error bodies describe the problem (e.g. missing permission) and never echo our token.
     const text = (await res.text()).slice(0, 500);
-    const retryAfterSeconds = Number(res.headers.get("retry-after"));
-    const retryAfterMs = Number.isFinite(retryAfterSeconds) ? retryAfterSeconds * 1000 : undefined;
-    throw new DiscordApiError(res.status, path, text, retryAfterMs);
+    const retryAfterHeader = res.headers.get("retry-after");
+    const retryAfterMs = retryAfterHeader === null ? undefined : Number(retryAfterHeader) * 1000;
+    throw new DiscordApiError(
+      res.status,
+      redactPath(path),
+      text,
+      Number.isFinite(retryAfterMs) ? retryAfterMs : undefined,
+    );
   }
 
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
+}
+
+/** Interaction webhook paths carry the interaction token, which must never reach error messages or logs. */
+export function redactPath(path: string): string {
+  return path.replace(/^\/webhooks\/(\d+)\/[^/]+/, "/webhooks/$1/[token]");
 }

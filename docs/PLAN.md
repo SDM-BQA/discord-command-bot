@@ -26,7 +26,7 @@ Deadline: 2 days (started 2026-09-24).
 | Duplicate delivery | Unique constraint on interaction id; insert-or-skip, no repeated side effects | local ✅ (incl. 3 simultaneous copies → 1 row) / live [ ] |
 | Downstream briefly down | Persist first; actions table (status, attempts, lastError, nextAttemptAt); background retry with backoff | [ ] |
 | Own service briefly down | Render kept warm by pinger; interactions persisted before ACK; pending actions resumed on boot | [ ] |
-| ~3s window | Defer (type 5) for slow work, follow up via interaction webhook | [ ] |
+| ~3s window | Response budget (1.5s): reply directly if fast, else defer (type 5) and edit in the result — or an explicit error — via interaction webhook | unit ✅ / live [ ] |
 | Secrets | Env only; pino redaction; masked in UI; never in client bundle | [ ] |
 
 ## Stretch goals (priority order)

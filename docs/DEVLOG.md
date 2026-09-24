@@ -96,6 +96,14 @@ Entry format: `### YYYY-MM-DD HH:MM — title` then Done / Problem / Fix (skip t
 - **Bug caught while reading:** with no `retry-after` header, `Number(null)` is `0`, so we reported "retry after 0ms" instead of "no hint". Fixed.
 - **Tested:** 20 tests pass, incl. fast reply, slow → deferred + edit, slow failure → deferred + explicit error, fast failure → caller's error reply.
 
+### 2026-09-25 — Live test of the deferred path found an event-loop freeze
+
+- **Live test:** set `RESPONSE_BUDGET_MS=1` on Render, ran `/status`: `response budget exceeded, deferring` → `deferred reply delivered`. Discord accepted the edit; deferred path proven live.
+- **Problem found in the same log:** the budget was 1ms but "deferring" was logged **1500ms** after the command started. A timer can only fire that late if the event loop was blocked. It was the first command after a restart, so: one-time startup work (Prisma init + first connection) freezing a 0.1-CPU Render instance. Locally the same freeze is only ~70ms, which is why no local test showed it. With the normal 1500ms budget a cold command would have hit ~3s → Discord timeout, and the budget couldn't have saved it.
+- **Fix:** `index.ts` runs `SELECT 1` before `listen()`, so Render (which routes traffic only after `/health` answers) never sends a command to a cold process. Added `connectionTimeoutMillis: 5000`: pg's default is to wait forever, so an unreachable DB would have hung boot and every request.
+- **Tested:** normal boot → warm-up 705ms then listen. Blackholed DB IP → warm-up fails after ~5.4s, server still starts. 20 tests pass.
+- **Lesson:** the log timestamps, not the final Discord message, showed the problem; both a direct and a deferred reply look identical to the user.
+
 ## AI wrong turns
 
 Record every time the AI suggested something wrong: what it said, how I noticed, what the fix was.

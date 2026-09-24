@@ -43,6 +43,13 @@ Entry format: `### YYYY-MM-DD HH:MM — title` then Done / Problem / Fix (skip t
 - **Done:** Created `stage` branch. From now on all commits go to `stage`; `main` only receives tested work via PR and is what Render deploys. Rule added to `CLAUDE.md`.
 - **Why not rewrite history:** the first 10 commits (docs + skeleton) were already pushed to `main`. Force-pushing to move them isn't worth it; they're a reasonable baseline.
 
+### 2026-09-24 — First deploy to Render
+
+- **Done:** PR #1 (`stage → main`) merged. Render free web service in Singapore, deploying `main`. Build: `npm ci --include=dev && npm run build` (`--include=dev` because `NODE_ENV=production` would otherwise skip TypeScript). Start: `npm start`. Health check path `/health`. Node pinned with `.node-version` = 22.
+- **Tested:** `https://discord-command-bot-mxhq.onrender.com/health` → 200 in ~0.4s; unknown route → 404; no `X-Powered-By` header.
+- **Workflow change:** from here I commit myself; the AI only edits files and suggests commit messages.
+- **Next:** uptime pinger so Render doesn't sleep.
+
 ## AI wrong turns
 
 Record every time the AI suggested something wrong: what it said, how I noticed, what the fix was.

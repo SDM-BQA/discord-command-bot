@@ -46,7 +46,8 @@ Full requirements: `docs/PLAN.md`. Architecture, flow and data model: `docs/DESI
 
 ## Working style
 
-- Build in small chunks. After each chunk: run it, test it (curl / real Discord), then commit.
+- Build in small chunks. After each chunk: run it, test it (curl / real Discord), then hand it to the developer to commit.
+- **The AI never commits or pushes.** Make the changes, then list the changed files and suggest a commit message; the developer reviews and commits. Read-only git commands are fine.
 - **Branches:** never commit to `main` directly. All work is committed on `stage`. When a step is working and tested, open a PR `stage → main`; `main` is what Render deploys, so it must always be deployable. Check the current branch before every commit.
 - Commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `test:`. One logical change per commit.
 - After each task, append a short entry to `docs/DEVLOG.md` (what was done, problems hit, fix). If you (the AI) suggested something wrong that we had to correct, add it under **AI wrong turns** with specifics — this feeds `AI_NOTES.md`.

@@ -43,7 +43,7 @@ Deadline: 2 days (started 2026-09-24).
 - [x] Discord application created (App ID, Public Key, Bot Token in `.env`)
 - [x] Test server created (`#bot-commands`, `#mirror-log`), Developer Mode on
 - [x] Neon project (`DATABASE_URL`, `DIRECT_URL`), region Singapore `ap-southeast-1`
-- [ ] Render account (web service must be in **Singapore**, same region as Neon)
+- [x] Render web service (Singapore, deploys `main`): https://discord-command-bot-mxhq.onrender.com
 - [ ] Mirror webhook on `#mirror-log`
 - [ ] Groq API key (stretch)
 - [ ] Uptime pinger on `/health`

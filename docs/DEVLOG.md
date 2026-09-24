@@ -20,6 +20,11 @@ Entry format: `### YYYY-MM-DD HH:MM — title` then Done / Problem / Fix (skip t
 - **Problem:** We were creating accounts (Discord, Neon) and heading to deploy before designing the flow, data model or constraints.
 - **Fix:** Stopped and wrote `docs/DESIGN.md` (flow, action lifecycle, schema with constraints, API, security mapping). Setup resumes after design review.
 
+### 2026-09-24 — Design reviewed and agreed
+
+- **Done:** Reviewed `docs/DESIGN.md` against the assignment PDF line by line. Found a gap: the rule only labelled reports (HIGH/LOW) and didn't change behaviour, so added `mirrorMinPriority` per command (D9). Chose webhook mirror (D8). Agreed the data model and its constraints (unique `discordId` for dedup, unique `(interactionId, type)` on actions, `guildId` everywhere).
+- **Next:** Neon project → Prisma schema from §4.
+
 ## AI wrong turns
 
 Record every time the AI suggested something wrong: what it said, how I noticed, what the fix was.

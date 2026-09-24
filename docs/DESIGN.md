@@ -1,6 +1,6 @@
 # Design
 
-Status: **Flow (§1–3) agreed; data model (§4) under review.**
+Status: **Agreed.** Changes to the design are made here first, then in code.
 
 ## 1. Components
 

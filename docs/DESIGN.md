@@ -257,8 +257,9 @@ server/
       mirror.ts
     utils/                   # logger, http (fetch with timeout), errors
     types/                   # shared types (Discord payloads, enums)
+    commands/definitions.ts  # slash command definitions (names shared with handlers)
+    scripts/registerCommands.ts  # inside src so it is typechecked with everything else
   prisma/schema.prisma
-  scripts/registerCommands.ts
 client/
   src/
     pages/                   # Login, Dashboard, GuildSettings

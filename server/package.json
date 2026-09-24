@@ -6,7 +6,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test test/*.test.ts",
+    "register-commands": "tsx --env-file=../.env src/scripts/registerCommands.ts"
   },
   "dependencies": {
     "discord-interactions": "^4.4.0",

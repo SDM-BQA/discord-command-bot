@@ -43,6 +43,20 @@ Entry format: `### YYYY-MM-DD HH:MM — title` then Done / Problem / Fix (skip t
 - **Done:** Created `stage` branch. From now on all commits go to `stage`; `main` only receives tested work via PR and is what Render deploys. Rule added to `CLAUDE.md`.
 - **Why not rewrite history:** the first 10 commits (docs + skeleton) were already pushed to `main`. Force-pushing to move them isn't worth it; they're a reasonable baseline.
 
+### 2026-09-24 — First deploy to Render
+
+- **Done:** PR #1 (`stage → main`) merged. Render free web service in Singapore, deploying `main`. Build: `npm ci --include=dev && npm run build` (`--include=dev` because `NODE_ENV=production` would otherwise skip TypeScript). Start: `npm start`. Health check path `/health`. Node pinned with `.node-version` = 22.
+- **Tested:** `https://discord-command-bot-mxhq.onrender.com/health` → 200 in ~0.4s; unknown route → 404; no `X-Powered-By` header.
+- **Workflow change:** from here I commit myself; the AI only edits files and suggests commit messages.
+- **Next:** uptime pinger so Render doesn't sleep.
+
+### 2026-09-24 — Interactions endpoint: signature + PING
+
+- **Done:** `POST /api/interactions` with `express.raw` (100kb limit, any Content-Type kept as a Buffer) → `verifyDiscordSignature` middleware (headers present, timestamp within ±5 min, Ed25519 via `discord-interactions`' `verifyKey`) → controller parses JSON + zod → PING returns PONG. JSON 404 and error handler (never leaks internals). `trust proxy` so logs show the real client IP on Render.
+- **Decision:** Used only `verifyKey` from `discord-interactions`, not its `verifyKeyMiddleware`: the middleware doesn't check timestamp age (replays) and parses the body itself. Checked `verifyKey` source: it catches all errors and returns false, so a malformed signature can't crash us.
+- **Tested:** 10 `node:test` tests with our own Ed25519 key pair acting as Discord: valid PING, no headers, wrong key, tampered body, garbage signature, stale timestamp, non-numeric timestamp, non-JSON, wrong JSON shape, oversized body. **Mutation check:** disabling the signature check made 3 tests fail, so the tests really guard it.
+- **Next:** deploy, then set Interactions Endpoint URL in the Developer Portal (Discord sends a PING and a bad-signature request to validate it).
+
 ## AI wrong turns
 
 Record every time the AI suggested something wrong: what it said, how I noticed, what the fix was.

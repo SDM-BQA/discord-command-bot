@@ -3,7 +3,7 @@ import { z } from "zod";
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().int().positive().default(3000),
-  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+  LOG_LEVEL: z.enum(["silent", "fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 
   DISCORD_APPLICATION_ID: z.string().regex(/^\d+$/, "must be a numeric Discord id"),
   DISCORD_PUBLIC_KEY: z.string().regex(/^[0-9a-f]{64}$/i, "must be 64 hex characters"),

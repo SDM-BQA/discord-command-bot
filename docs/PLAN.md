@@ -50,6 +50,6 @@ Deadline: 2 days (started 2026-09-24).
 
 ## Schedule
 
-**Day 1** — accounts → skeleton → deploy hello world → interactions endpoint (signature + PING) → register commands → save + dedup → reply → mirror. Core flow live by end of day.
+**Day 1** — design review (`docs/DESIGN.md`) → accounts → skeleton → deploy hello world → interactions endpoint (signature + PING) → register commands → save + dedup → reply → mirror. Core flow live by end of day.
 
 **Day 2** — admin login + server connection → dashboard (live log, rule config) → deferred responses + retry job → stretch goals → README, AI_NOTES, test instructions → deliberately test every quality-bar row.

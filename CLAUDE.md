@@ -7,7 +7,7 @@ Context for AI assistants working in this repo. Read this first, every session.
 A job-assignment project (2-day deadline): a webhook-based Discord slash-command bot + admin dashboard.
 Flow: Discord POSTs an interaction to `/api/interactions` → verify Ed25519 signature → persist (dedup on interaction id) → apply configurable rule → reply in Discord → mirror to a second channel (Discord webhook) → visible in the admin dashboard.
 
-Full requirements: `docs/PLAN.md`. Decisions and their reasons: `docs/DECISIONS.md`. Progress log: `docs/DEVLOG.md`.
+Full requirements: `docs/PLAN.md`. Architecture, flow and data model: `docs/DESIGN.md` (follow it; if code needs to differ, update the design first). Decisions and their reasons: `docs/DECISIONS.md`. Progress log: `docs/DEVLOG.md`.
 
 ## About me (the developer)
 

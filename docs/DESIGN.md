@@ -1,6 +1,6 @@
 # Design
 
-Status: **Draft — under review.** Nothing is built until each section is agreed.
+Status: **Flow (§1–3) agreed; data model (§4) under review.**
 
 ## 1. Components
 
@@ -71,7 +71,7 @@ Each interaction creates **Action** rows. Each action runs independently, and on
 | `MIRROR` | Posts a notification to the mirror channel | Mirror webhook URL |
 | `AI_TRIAGE` *(stretch)* | Summarize + tag the text via Groq | Groq API key |
 
-Which actions get created depends on command config: `/status` creates none. `CHANNEL_POST` is skipped if no channel is configured, and `MIRROR` is skipped if no webhook is set or mirroring is disabled.
+Which actions get created depends on command config: `/status` creates none. `CHANNEL_POST` is skipped if no channel is configured, and `MIRROR` is skipped if no webhook is set, mirroring is disabled, or the priority is below the command's `mirrorMinPriority`. **This is where the rule changes what the bot does**, not just how the report is labelled.
 
 ### 3.3 Action lifecycle and retries
 
@@ -118,6 +118,7 @@ Unknown guilds (the bot was added without going through the dashboard) get a row
 | `commandName` | string | `report`, `status` |
 | `enabled` | bool, default true | Disabled → ephemeral "this command is disabled" |
 | `mirrorEnabled` | bool, default true | |
+| `mirrorMinPriority` | enum `LOW \| MEDIUM \| HIGH`, default `LOW` | Mirror only when the rule's priority is ≥ this. E.g. `HIGH` → only urgent reports reach the mirror channel. |
 | `postToChannel` | bool, default true | |
 | | | **Unique (`guildId`, `commandName`)** |
 
@@ -265,8 +266,10 @@ client/
     api/                     # fetch wrapper
 ```
 
-## 9. Open questions for me to decide
+## 9. Resolved questions
 
-1. **Mirror via webhook URL (stored per guild) vs. bot posting to a second channel id.** The webhook is independent of the bot and matches the brief's wording. The bot-post option means one less secret to store.
-2. **Is `/report` always deferred?** Proposed yes: one code path, and AI later fits without changes.
-3. **Auto-register unknown guilds?** Proposed yes (graceful), vs. rejecting commands from servers that aren't connected.
+1. **Mirror via a Discord channel webhook URL**, stored per guild and treated as a secret. It works independently of the bot, and the brief lists "mirror-channel URLs" as secrets, which implies webhooks.
+2. **`/report` is always deferred.** One code path; the AI step fits in later without changing the flow.
+3. **Unknown guilds are auto-registered** and their commands are recorded and replied to; `CHANNEL_POST`/`MIRROR` are skipped until the guild is connected in the dashboard.
+4. **The rule must change behaviour**, not just label: `mirrorMinPriority` per command.
+5. **Keep `ActionAttempt`.** It's cheap, and it is exactly the "visible history of failures and retries" stretch goal.

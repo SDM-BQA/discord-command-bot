@@ -40,6 +40,18 @@ Format: context → choice → trade-off. Status is **Proposed** until confirmed
 - **Choice:** Each side effect is an `Action` row (`type`, `status`, `attempts`, `lastError`, `nextAttemptAt`). A `setInterval` worker retries due actions with exponential backoff, max N attempts, then `failed` (visible in dashboard). Worker also resumes pending rows on boot.
 - **Trade-off:** In-process worker only runs while the service is up (kept warm by D3). Discord follow-ups using the interaction token only work within 15 min; after that, the worker falls back to posting in the configured channel with the bot token.
 
+## D8. Mirror via Discord channel webhook — Accepted
+
+- **Context:** Need a second channel; options were a webhook URL or the bot posting to another channel id.
+- **Choice:** Per-guild webhook URL, write-only in the UI (masked), never logged.
+- **Trade-off:** One more secret to protect, but the mirror keeps working even if the bot's permissions break, and the brief treats mirror URLs as secrets, which hints this is what they expect.
+
+## D9. Rules drive behaviour, not just labels — Accepted
+
+- **Context:** Brief says the app "acts on" commands and "applies a simple rule". A priority label alone doesn't change anything the bot does.
+- **Choice:** Keyword → priority (first match wins), and each command has `mirrorMinPriority`, so e.g. only HIGH reports get mirrored.
+- **Trade-off:** Slightly more config; in return the rule is demoable (`/report typo` → not mirrored, `/report payment down` → mirrored).
+
 ## D7. Live log via polling — Proposed
 
 - **Context:** Dashboard needs a "live" log.

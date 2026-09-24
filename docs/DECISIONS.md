@@ -38,7 +38,13 @@ Format: context → choice → trade-off. Status is **Proposed** until confirmed
 
 - **Context:** Mirror/AI/follow-ups must not be lost if briefly down.
 - **Choice:** Each side effect is an `Action` row (`type`, `status`, `attempts`, `lastError`, `nextAttemptAt`). A `setInterval` worker retries due actions with exponential backoff, max N attempts, then `failed` (visible in dashboard). Worker also resumes pending rows on boot.
-- **Trade-off:** In-process worker only runs while the service is up (kept warm by D3). Discord follow-ups using the interaction token only work within 15 min; after that, the worker falls back to posting in the configured channel with the bot token.
+- **Trade-off:** In-process worker only runs while the service is up (kept warm by D3). The interaction token (used for the REPLY follow-up) expires after 15 min; if REPLY still hasn't succeeded by then it is marked FAILED, with no fallback. That's acceptable because CHANNEL_POST already puts the report in the channel.
+
+## D7. Live log via polling — Proposed
+
+- **Context:** Dashboard needs a "live" log.
+- **Choice:** Poll the API every ~3s.
+- **Trade-off:** Slightly wasteful vs SSE, but simpler and no connection issues on Render. Could switch to SSE later.
 
 ## D8. Mirror via Discord channel webhook — Accepted
 
@@ -51,9 +57,3 @@ Format: context → choice → trade-off. Status is **Proposed** until confirmed
 - **Context:** Brief says the app "acts on" commands and "applies a simple rule". A priority label alone doesn't change anything the bot does.
 - **Choice:** Keyword → priority (first match wins), and each command has `mirrorMinPriority`, so e.g. only HIGH reports get mirrored.
 - **Trade-off:** Slightly more config; in return the rule is demoable (`/report typo` → not mirrored, `/report payment down` → mirrored).
-
-## D7. Live log via polling — Proposed
-
-- **Context:** Dashboard needs a "live" log.
-- **Choice:** Poll the API every ~3s.
-- **Trade-off:** Slightly wasteful vs SSE, but simpler and no connection issues on Render. Could switch to SSE later.

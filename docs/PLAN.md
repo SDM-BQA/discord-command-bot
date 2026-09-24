@@ -23,7 +23,7 @@ Deadline: 2 days (started 2026-09-24).
 | Replayed requests | Reject timestamp > 5 min old; dedup catches the rest | unit ✅ (timestamp) / live [ ] |
 | Junk bodies | Verify before parsing; zod-validate after; 100kb limit (413); never 500 on bad input | unit ✅ / live ✅ |
 | PING | Respond `{ type: 1 }` | unit ✅ / live ✅ (Discord accepted endpoint URL) |
-| Duplicate delivery | Unique constraint on interaction id; insert-or-skip, no repeated side effects | [ ] |
+| Duplicate delivery | Unique constraint on interaction id; insert-or-skip, no repeated side effects | local ✅ (incl. 3 simultaneous copies → 1 row) / live [ ] |
 | Downstream briefly down | Persist first; actions table (status, attempts, lastError, nextAttemptAt); background retry with backoff | [ ] |
 | Own service briefly down | Render kept warm by pinger; interactions persisted before ACK; pending actions resumed on boot | [ ] |
 | ~3s window | Defer (type 5) for slow work, follow up via interaction webhook | [ ] |

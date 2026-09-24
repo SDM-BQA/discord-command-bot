@@ -88,6 +88,14 @@ Entry format: `### YYYY-MM-DD HH:MM — title` then Done / Problem / Fix (skip t
 - **Note:** report ids have gaps (#3, #5…) because a failed duplicate insert still consumes a Postgres sequence value. Harmless.
 - **AI tooling slip:** the AI's first attempt to write these files failed on a shell quoting error, so nothing was written. It checked `git status`, saw no changes, and rewrote them with its file tool.
 
+### 2026-09-25 — Response budget for the 3-second window (D10)
+
+- **Measured on Render:** first command after deploy 2016ms, next 128ms.
+- **Done:** `respondWithinBudget` races handling against `RESPONSE_BUDGET_MS` (1500): fast → direct reply; slow → type 5 "thinking…", then `PATCH /webhooks/{app}/{token}/messages/@original` with the result or an explicit error. `editOriginalResponse` in `services/discord/interactionWebhook.ts`.
+- **Security catch:** the follow-up URL contains the interaction token and `DiscordApiError` includes the path → a failed follow-up would have logged the token. Added `redactPath` → `/webhooks/{app}/[token]/…`, with tests.
+- **Bug caught while reading:** with no `retry-after` header, `Number(null)` is `0`, so we reported "retry after 0ms" instead of "no hint". Fixed.
+- **Tested:** 20 tests pass, incl. fast reply, slow → deferred + edit, slow failure → deferred + explicit error, fast failure → caller's error reply.
+
 ## AI wrong turns
 
 Record every time the AI suggested something wrong: what it said, how I noticed, what the fix was.

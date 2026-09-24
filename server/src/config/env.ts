@@ -10,6 +10,10 @@ const envSchema = z.object({
   DISCORD_BOT_TOKEN: z.string().min(1),
 
   DATABASE_URL: z.string().startsWith("postgres"),
+
+  // How long to wait before answering Discord with "thinking…" (Discord's hard limit is 3000ms).
+  // Setting it very low forces the deferred path, which is how that path is tested live.
+  RESPONSE_BUDGET_MS: z.coerce.number().int().min(1).max(2500).default(1500),
 });
 
 export type Env = z.infer<typeof envSchema>;

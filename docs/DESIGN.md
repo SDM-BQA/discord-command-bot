@@ -259,7 +259,9 @@ server/
     types/                   # shared types (Discord payloads, enums)
     commands/definitions.ts  # slash command definitions (names shared with handlers)
     scripts/registerCommands.ts  # inside src so it is typechecked with everything else
-  prisma/schema.prisma
+    db/prisma.ts             # PrismaClient with the pg driver adapter (pooled DATABASE_URL)
+    generated/prisma/        # generated client (git-ignored, built on install)
+  prisma/schema.prisma       # + prisma.config.ts: migrations use DIRECT_URL
 client/
   src/
     pages/                   # Login, Dashboard, GuildSettings

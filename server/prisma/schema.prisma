@@ -1,0 +1,155 @@
+// Data model from docs/DESIGN.md §4. Discord ids ("snowflakes") are Strings: they overflow JS numbers.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ActionType {
+  REPLY
+  CHANNEL_POST
+  MIRROR
+  AI_TRIAGE
+}
+
+enum ActionStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+
+/// A Discord server. Created on the first command from it, "connected" once set up in the dashboard.
+model Guild {
+  id               String    @id
+  name             String?
+  postChannelId    String?
+  /// Secret: never returned to the client or logged.
+  mirrorWebhookUrl String?
+  connectedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  commandConfigs CommandConfig[]
+  rules          Rule[]
+  interactions   Interaction[]
+}
+
+/// Per-guild behaviour of one slash command.
+model CommandConfig {
+  id                Int      @id @default(autoincrement())
+  guildId           String
+  commandName       String
+  enabled           Boolean  @default(true)
+  postToChannel     Boolean  @default(true)
+  mirrorEnabled     Boolean  @default(true)
+  /// The rule changes behaviour here: mirror only when the report's priority is at least this.
+  mirrorMinPriority Priority @default(LOW)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, commandName])
+}
+
+/// "If the text contains <keyword>, set priority to <priority>". Evaluated by position; first match wins.
+model Rule {
+  id          Int      @id @default(autoincrement())
+  guildId     String
+  commandName String
+  keyword     String
+  priority    Priority
+  enabled     Boolean  @default(true)
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  guild        Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  interactions Interaction[]
+
+  @@index([guildId, commandName, position])
+}
+
+/// Every interaction we accepted. The unique discordId is what makes duplicate deliveries harmless.
+model Interaction {
+  id            Int       @id @default(autoincrement())
+  discordId     String    @unique
+  guildId       String
+  type          Int
+  commandName   String
+  userId        String
+  userName      String
+  channelId     String
+  input         String?
+  priority      Priority?
+  matchedRuleId Int?
+  /// Sensitive: lets the holder reply as the bot for 15 minutes. Cleared once the REPLY action is done.
+  token         String?
+  aiSummary     String?
+  aiTags        String[]  @default([])
+  createdAt     DateTime  @default(now())
+
+  guild       Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  // A deleted rule leaves the history intact; it just no longer says which rule matched.
+  matchedRule Rule?    @relation(fields: [matchedRuleId], references: [id], onDelete: SetNull)
+  actions     Action[]
+
+  @@index([guildId, createdAt(sort: Desc)])
+}
+
+/// One side effect of an interaction (reply, channel post, mirror, AI), retried until it succeeds or gives up.
+model Action {
+  id            Int          @id @default(autoincrement())
+  interactionId Int
+  /// Denormalised from the interaction so per-guild dashboard queries need no join.
+  guildId       String
+  type          ActionType
+  status        ActionStatus @default(PENDING)
+  attempts      Int          @default(0)
+  maxAttempts   Int          @default(5)
+  nextAttemptAt DateTime     @default(now())
+  /// Set when claimed; a PROCESSING action with an old lockedAt was abandoned by a crash and is reclaimed.
+  lockedAt      DateTime?
+  /// Sanitised: no URLs or tokens.
+  lastError     String?
+  completedAt   DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  interaction Interaction     @relation(fields: [interactionId], references: [id], onDelete: Cascade)
+  attemptLog  ActionAttempt[]
+
+  // An interaction can never get two actions of the same type, e.g. a double mirror post.
+  @@unique([interactionId, type])
+  @@index([status, nextAttemptAt])
+  @@index([guildId, createdAt(sort: Desc)])
+}
+
+/// History of every try of an action: the "visible history of failures and retries".
+model ActionAttempt {
+  id         Int      @id @default(autoincrement())
+  actionId   Int
+  attemptNo  Int
+  ok         Boolean
+  httpStatus Int?
+  /// Sanitised: no URLs or tokens.
+  error      String?
+  durationMs Int
+  createdAt  DateTime @default(now())
+
+  action Action @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@index([actionId])
+}

@@ -24,6 +24,8 @@ Format: context → choice → trade-off. Status is **Proposed** until confirmed
 
 - **Context:** Need a unique constraint for dedup and relational data (guilds, rules, interactions, actions).
 - **Choice:** Neon free tier; pooled URL for the app, direct URL for migrations.
+- **Why not MongoDB (my usual stack):** Mongo could work (unique indexes exist, Atlas is free), but the data is relational — guild → rules, guild → interactions → actions — and foreign keys guarantee no orphaned actions. Dedup is one atomic `INSERT ... ON CONFLICT DO NOTHING`, and a transaction saves an interaction with its pending actions together so a crash can't leave half-written state. Also the brief's suggested option.
+- **New for me:** Prisma migrations (schema changes are explicit, unlike Mongoose where new fields just appear).
 - **Trade-off:** Neon suspends idle compute; the first query after idle adds latency. Mitigation: the interaction handler keeps its pre-response DB work to one insert, and defers whenever the response isn't immediate.
 
 ## D5. Admin auth: single email/password admin, bot added via OAuth2 install link — Proposed

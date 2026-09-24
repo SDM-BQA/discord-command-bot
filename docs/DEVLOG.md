@@ -31,6 +31,13 @@ Entry format: `### YYYY-MM-DD HH:MM — title` then Done / Problem / Fix (skip t
 - **Skipped:** Neon's "set up with AI agent" prompt (global CLI, MCP server, `neon.ts`, `neon deploy`). Not needed: Prisma only needs the URLs, hosting is Render, and I don't want the AI to have direct DB access.
 - **Note:** AI suggested US East; I picked Singapore. Fine as long as Render is in the same region.
 
+### 2026-09-24 — Server skeleton
+
+- **Done:** npm workspaces (root + `server/`). Express 5 + TypeScript 7 (strict, `noUncheckedIndexedAccess`). `config/env.ts` validates env with zod at startup; `utils/logger.ts` is pino with redaction of token/password/cookie/webhook fields; `GET /health` (no DB access). No `dotenv`: Node 22's `--env-file` loads `.env` in dev.
+- **Tested:** `/health` → 200 in dev and in the compiled production build (JSON logs). Starting with no env vars exits 1 and lists only variable names, no values.
+- **Problem:** First prod test failed: `DATABASE_URL` missing. Cause: I loaded `.env` with bash `source`, and the `&` in the Neon URL query string broke it. **Fix:** use `node --env-file`. The app itself was fine.
+- **Note:** npm installed `@types/node@26` while runtime is Node 22; pinned to `@types/node@22` so types match what exists at runtime.
+
 ## AI wrong turns
 
 Record every time the AI suggested something wrong: what it said, how I noticed, what the fix was.

@@ -80,6 +80,14 @@ Entry format: `### YYYY-MM-DD HH:MM — title` then Done / Problem / Fix (skip t
 - **npm audit:** 4 high in `mysql2` / `deepmerge-ts`, both inside the Prisma **CLI** (dev tool), not in our runtime; we don't use MySQL. `audit fix --force` would downgrade to Prisma 6, so accepted.
 - **Warning fixed:** pg warned that `sslmode=require` will weaken to libpq semantics in its next major → switched both URLs to `sslmode=verify-full` (same strict behaviour as today, explicit).
 
+### 2026-09-25 — Record every command, with dedup and rules
+
+- **Done:** `handleCommand`: guild check → `getOrCreateGuild` (one query; unseen guilds get default configs + 5 default rules so they work before the dashboard exists) → `applyRules` (pure function: first enabled rule by position whose keyword is in the text; else LOW) → `recordInteraction` (insert; unique `discordId` violation = duplicate → do nothing) → reply. Both commands reply immediately for now; `/report` moves to deferred + actions in step 8. DB errors → honest ephemeral "not recorded, try again" instead of a timeout. Logs `durationMs` per command.
+- **Tested:** 4 unit tests for `applyRules`. Local server + real Neon, signed with a test key: payment→HIGH, bug→MEDIUM, no keyword→LOW; same interaction twice → "already processed"; **3 simultaneous copies → exactly 1 row**; DM → refused; `/status` correct. No interaction token in logs. Test guild deleted afterwards.
+- **Finding:** first command took **2.3s** (Neon wake + new connection + guild creation, over India→Singapore). Too close to Discord's 3s. Must measure on Render (same region as Neon) and decide in step 8.
+- **Note:** report ids have gaps (#3, #5…) because a failed duplicate insert still consumes a Postgres sequence value. Harmless.
+- **AI tooling slip:** the AI's first attempt to write these files failed on a shell quoting error, so nothing was written. It checked `git status`, saw no changes, and rewrote them with its file tool.
+
 ## AI wrong turns
 
 Record every time the AI suggested something wrong: what it said, how I noticed, what the fix was.

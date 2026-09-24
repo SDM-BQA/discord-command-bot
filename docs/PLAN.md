@@ -19,10 +19,10 @@ Deadline: 2 days (started 2026-09-24).
 
 | Requirement | Solution | Tested? |
 |---|---|---|
-| Forged / unsigned requests | Ed25519 verify on raw body, every request → 401 | [ ] |
-| Replayed requests | Reject timestamp > 5 min old; dedup catches the rest | [ ] |
-| Junk bodies | Verify before parsing; zod-validate after; never 500 on bad input | [ ] |
-| PING | Respond `{ type: 1 }` | [ ] |
+| Forged / unsigned requests | Ed25519 verify on raw body, every request → 401 | unit ✅ / live [ ] |
+| Replayed requests | Reject timestamp > 5 min old; dedup catches the rest | unit ✅ (timestamp) / live [ ] |
+| Junk bodies | Verify before parsing; zod-validate after; 100kb limit (413); never 500 on bad input | unit ✅ / live [ ] |
+| PING | Respond `{ type: 1 }` | unit ✅ / live [ ] |
 | Duplicate delivery | Unique constraint on interaction id; insert-or-skip, no repeated side effects | [ ] |
 | Downstream briefly down | Persist first; actions table (status, attempts, lastError, nextAttemptAt); background retry with backoff | [ ] |
 | Own service briefly down | Render kept warm by pinger; interactions persisted before ACK; pending actions resumed on boot | [ ] |
@@ -46,7 +46,7 @@ Deadline: 2 days (started 2026-09-24).
 - [x] Render web service (Singapore, deploys `main`): https://discord-command-bot-mxhq.onrender.com
 - [ ] Mirror webhook on `#mirror-log`
 - [ ] Groq API key (stretch)
-- [ ] Uptime pinger on `/health`
+- [x] Uptime pinger on `/health` (UptimeRobot, every 5 min)
 
 ## Schedule
 

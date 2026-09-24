@@ -50,6 +50,13 @@ Entry format: `### YYYY-MM-DD HH:MM — title` then Done / Problem / Fix (skip t
 - **Workflow change:** from here I commit myself; the AI only edits files and suggests commit messages.
 - **Next:** uptime pinger so Render doesn't sleep.
 
+### 2026-09-24 — Interactions endpoint: signature + PING
+
+- **Done:** `POST /api/interactions` with `express.raw` (100kb limit, any Content-Type kept as a Buffer) → `verifyDiscordSignature` middleware (headers present, timestamp within ±5 min, Ed25519 via `discord-interactions`' `verifyKey`) → controller parses JSON + zod → PING returns PONG. JSON 404 and error handler (never leaks internals). `trust proxy` so logs show the real client IP on Render.
+- **Decision:** Used only `verifyKey` from `discord-interactions`, not its `verifyKeyMiddleware`: the middleware doesn't check timestamp age (replays) and parses the body itself. Checked `verifyKey` source: it catches all errors and returns false, so a malformed signature can't crash us.
+- **Tested:** 10 `node:test` tests with our own Ed25519 key pair acting as Discord: valid PING, no headers, wrong key, tampered body, garbage signature, stale timestamp, non-numeric timestamp, non-JSON, wrong JSON shape, oversized body. **Mutation check:** disabling the signature check made 3 tests fail, so the tests really guard it.
+- **Next:** deploy, then set Interactions Endpoint URL in the Developer Portal (Discord sends a PING and a bad-signature request to validate it).
+
 ## AI wrong turns
 
 Record every time the AI suggested something wrong: what it said, how I noticed, what the fix was.

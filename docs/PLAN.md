@@ -38,6 +38,16 @@ Deadline: 2 days (started 2026-09-24).
 5. [ ] Observability: structured logs + failures/retries view
 6. [ ] Multi-server isolation (schema supports it from day 1)
 
+## Setup progress
+
+- [x] Discord application created (App ID, Public Key, Bot Token in `.env`)
+- [x] Test server created (`#bot-commands`, `#mirror-log`), Developer Mode on
+- [ ] Neon project (`DATABASE_URL`, `DIRECT_URL`)
+- [ ] Render account
+- [ ] Mirror webhook on `#mirror-log`
+- [ ] Groq API key (stretch)
+- [ ] Uptime pinger on `/health`
+
 ## Schedule
 
 **Day 1** — accounts → skeleton → deploy hello world → interactions endpoint (signature + PING) → register commands → save + dedup → reply → mirror. Core flow live by end of day.
